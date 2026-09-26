@@ -17,3 +17,13 @@
 - Visual overhaul: generated and integrated three illustrated top-down level backgrounds for Jungle, Sea, and Nightmare. Reworked the title screen, chapter HUD, cutscene panels, and overlays so the game reads as a coherent illustrated horror experience instead of debug geometry.
 - Runtime fix from playtest: the menu was drawing the settings list even while settings were closed, and cutscenes could appear frozen when the game window did not own keyboard focus. Moved input handling to `_input`, added mouse-click advancement, visible click/E/Space instructions, and an eight-second fallback auto-advance.
 - Gameplay depth pass: added real marker dialogue, a gated survey objective, changed Expedition IV text, lighthouse interaction, sea island/wreck interactions, river collision, nightmare wall collision, and a dialogue lock that pauses movement while reading.
+
+## 2026-09-26 — Rebuilt as a real game
+
+- Replaced the image-led implementation with a fresh single-scene Godot game implementation whose core levels are authored as navigable spaces in code.
+- Jungle is now an investigation level with collision walls, two required records, an optional fourth expedition record, an objective arrow, a moving black figure, and a survey exit.
+- Sea is now a distinct ship level with hazards, islands, wreckage, lighthouse interaction, tentacle escalation, and a story-consistent whisper pressure meter.
+- Nightmare is now a distinct maze level with collision walls, route checkpoints for the figure, a delayed Witness pursuit, a reachable exit, and restart-on-seen failure.
+- Connected cutscenes now use different illustrated compositions for jungle, transition, and eldritch reveal instead of reusing one merged background image.
+- Added redundant input paths: click, E, Space, Enter, and physical-key fallback for progression; R restarts a level; dialogue renders line-by-line.
+- Godot 4.7 headless editor validation and headless runtime validation completed without parse or runtime errors after the rebuild.
