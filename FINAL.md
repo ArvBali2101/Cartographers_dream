@@ -10,6 +10,7 @@ DreamScape is a dark, dreamlike cartography prototype for mapping the persistent
 - Interactive states: map update feedback, landmark selection, World/Lucid/Emotion view toggles, dream-sign highlighting, timeline movement, and replay.
 - Play mode: select “Enter dream,” move Maya with WASD/arrow keys, hold Shift to move faster, click landmarks, and press Esc to exit.
 - Gameplay pass: entering the dream opens a short cinematic intro, movement leaves a glowing trail, nearby landmarks trigger memory cards, and the world atmosphere reacts to doors, water, and flight zones.
+- Memory interaction: “Open memory” and in-world landmark clicks open a focused memory modal without leaving the playable world.
 
 ## Product decisions
 

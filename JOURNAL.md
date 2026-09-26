@@ -26,3 +26,10 @@
 - Added reactive atmosphere for nearby doors, water, and flight zones, plus a working zoom state and emotion-map background shift.
 - The experience now has a complete demo loop: enter dream → move → discover a place → read the memory → leave with a changed world state.
 - Build passed and the local route returned HTTP 200 after the gameplay pass.
+
+## 2026-09-26 — Memory interaction fix
+
+- Fixed a gameplay bug where “Open memory” only updated the hidden sidebar while the player was in full-screen mode.
+- Added an in-world memory modal with the selected place, visit count, first-seen date, mood, and a continue-exploring action.
+- Landmark clicks in game mode now open the same memory modal directly.
+- Build passed and the local route returned HTTP 200 after the fix.
