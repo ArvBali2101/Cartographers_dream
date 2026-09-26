@@ -1,36 +1,24 @@
-# DreamScape — current final state
+# MAP — current final state
 
-DreamScape is a dark, dreamlike cartography prototype for saving dreams as scenes, connecting them into a lifetime world, and isolating the dream that returns most often.
+MAP is a Godot 4 procedural vertical slice for a 2D top-down psychological / eldritch horror speedrunning game.
 
-## Current experience
+## Playable structure
 
-- Left panel: write a dream, mark the date/lucid state, and map it.
-- Center: an explorable fantasy map with named locations, routes, fog, a “you” marker, timeline, replay animation, and a full-screen playable mode.
-- Right panel: selected-location history, recurring dream signs, world statistics, and the product principle.
-- Interactive states: map update feedback, landmark selection, World/Lucid/Emotion view toggles, dream-sign highlighting, timeline movement, and replay.
-- Play mode: select “Enter dream,” move Maya with WASD/arrow keys, hold Shift to move faster, click landmarks, and press Esc to exit.
-- Gameplay pass: entering the dream opens a short cinematic intro, movement leaves a glowing trail, nearby landmarks trigger memory cards, and the world atmosphere reacts to doors, water, and flight zones.
-- Memory interaction: “Open memory” and in-world landmark clicks open a focused memory modal without leaving the playable world.
-- Three-scene model: Tonight’s Dream Scene, Lifetime World, and Most Recurring Dream are separate views with distinct map data and narrative purpose.
+Menu → Opening panels → The Map (jungle) → cutscene → The Drowned Map (sea) → cutscene → The Last Map (nightmare) → ending → post-ending sting.
 
-## Product decisions
+## Current implementation
 
-- The prototype uses the fictional demo user Maya and interconnected synthetic dream data.
-- It presents recurring concepts as places, landmarks, and routes rather than as a generic graph.
-- It does not interpret dreams or make psychological diagnoses.
+- WASD / arrow movement, Shift sprint, E interaction, Escape to menu, F2 speedrun timer.
+- Jungle expedition markers I, II, and IV; marker III is intentionally absent.
+- Memory minimap diverges from the actual jungle route.
+- Silent recurring figure that retreats when approached.
+- Sea level with hidden horror timer, obstacles, islands, wreckage, lighthouse, tentacles, whispers, and restart-on-drown.
+- Nightmare level with scripted figure checkpoints, Witness pursuit, maze-like geometry, and final exit.
+- Still-panel cutscenes, ending, and the “YOU SHOULDN’T HAVE LOOKED AT A GOD.” post-ending sting.
 
 ## Technical state
 
-- React/Vinext site scaffold in `app/`.
-- Main experience in `app/page.tsx`.
-- Visual system and responsive behavior in `app/globals.css`.
-- No external credentials or backend required for the current demo.
-- The current demo is intentionally deterministic and self-contained; it is ready for a live hackathon presentation without credentials.
-
-## Published demo
-
-Private live demo: https://dreamscape-cs-hackathon.baliarv21.chatgpt.site
-- Cinematic scene layer: each view now has its own full-screen dream artwork. Tonight shows a complete journey, Lifetime shows the expanding world, and Most Recurring shows the repeating school/corridor/flight sequence.
-- Scene artwork lives in `public/scenes/daily.png`, `public/scenes/lifetime.png`, and `public/scenes/recurring.png`.
-- Location portals: selecting a landmark now enters it as the next scene. The selected location becomes the cinematic focus, surrounding map elements fade back, and the player can continue moving through that location with the scene intro and HUD.
-- Reliable location entry: the right-hand location card now includes `Enter [location] scene`, so Rooftop and every other landmark can be entered directly even if the map hotspot is difficult to hit.
+- `project.godot` — Godot project settings and controls.
+- `Main.tscn` — single entry scene.
+- `main.gd` — procedural renderer, state machine, level logic, interactions, cutscenes, and UI.
+- External art and audio can be layered in later without changing the game flow.
