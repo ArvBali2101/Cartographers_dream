@@ -863,6 +863,9 @@ export default function Home() {
                 : "Open location history"}{" "}
               <span>↗</span>
             </button>
+            <button className="enter-location-button" onClick={() => enterLocation(selectedLocation.id)}>
+              Enter {selectedLocation.label} scene <span>→</span>
+            </button>
           </div>
           <div className="insight-block">
             <div className="block-heading">
