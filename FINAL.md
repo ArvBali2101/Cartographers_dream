@@ -9,6 +9,7 @@ DreamScape is a dark, dreamlike cartography prototype for mapping the persistent
 - Right panel: selected-location history, recurring dream signs, world statistics, and the product principle.
 - Interactive states: map update feedback, landmark selection, World/Lucid/Emotion view toggles, dream-sign highlighting, timeline movement, and replay.
 - Play mode: select “Enter dream,” move Maya with WASD/arrow keys, hold Shift to move faster, click landmarks, and press Esc to exit.
+- Gameplay pass: entering the dream opens a short cinematic intro, movement leaves a glowing trail, nearby landmarks trigger memory cards, and the world atmosphere reacts to doors, water, and flight zones.
 
 ## Product decisions
 
@@ -22,6 +23,7 @@ DreamScape is a dark, dreamlike cartography prototype for mapping the persistent
 - Main experience in `app/page.tsx`.
 - Visual system and responsive behavior in `app/globals.css`.
 - No external credentials or backend required for the current demo.
+- The current demo is intentionally deterministic and self-contained; it is ready for a live hackathon presentation without credentials.
 
 ## Published demo
 

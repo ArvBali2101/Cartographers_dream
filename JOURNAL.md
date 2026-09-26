@@ -18,3 +18,11 @@
 
 - No external AI, database, embeddings, or authentication are wired yet; the current experience is a playable local prototype with deterministic demo data.
 - Next likely work: replace demo actions with an extraction API, persist dreams, and add a real world engine while preserving the visual interaction model.
+
+## 2026-09-26 — Final gameplay pass
+
+- Added a cinematic “Last night” entry sequence when the player enters the dream.
+- Added player movement trail rendering, proximity detection, discovered-place tracking, and landmark-specific memory prompts.
+- Added reactive atmosphere for nearby doors, water, and flight zones, plus a working zoom state and emotion-map background shift.
+- The experience now has a complete demo loop: enter dream → move → discover a place → read the memory → leave with a changed world state.
+- Build passed and the local route returned HTTP 200 after the gameplay pass.
