@@ -45,6 +45,18 @@ const sceneMeta: Record<SceneView, { label: string; title: string; description: 
   recurring: { label: 'THE MOST RECURRING DREAM', title: 'One dream. Many returns.', description: 'The repeated version of your dreams, gathered in one scene.', intro: 'The school returns again.' },
 };
 
+const sceneArtwork: Record<SceneView, string> = {
+  daily: '/scenes/daily.png',
+  lifetime: '/scenes/lifetime.png',
+  recurring: '/scenes/recurring.png',
+};
+
+const sceneBeats: Record<SceneView, string[]> = {
+  daily: ['The house is still warm behind you.', 'The school corridor is flooded with yesterday.', 'A mirror waits inside the impossible door.', 'Gravity gives up. The scene opens into flight.'],
+  lifetime: ['The first house remembers where every road began.', 'The school district keeps adding rooms.', 'The lake holds reflections from dreams not yet dreamed.', 'Far above it all, the flight islands keep moving.'],
+  recurring: ['You arrive at the school again.', 'The hallway is longer than last time.', 'The door changes when you look away.', 'The roof is waiting. You already know what happens next.'],
+};
+
 function MapNode({ location, selected, onSelect, mode }: { location: SceneLocation; selected: boolean; onSelect: () => void; mode: Mode }) {
   const isSign = location.kind === 'door' || location.kind === 'lake' || location.kind === 'cloud';
   const glyph = location.kind === 'school' || location.kind === 'home' ? '⌂' : location.kind === 'forest' ? '♧' : location.kind === 'lake' ? '◒' : location.kind === 'door' ? '⌑' : location.kind === 'roof' ? '⌃' : '✦';

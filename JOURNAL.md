@@ -42,3 +42,4 @@
 - Most Recurring Dream is a separate composite scene that gathers the repeated school/corridor/roof/flight pattern into one playable loop.
 - Added clear scene navigation, scene-specific landmarks, copy, routes, stats, and gameplay entry points so the product no longer treats all dreams as one undifferentiated map.
 - Build passed and the local route returned HTTP 200 after the restructure.
+- 2026-09-26 cinematic scene pass: feedback clarified that each of the three views must feel like a full movie scene that keeps unfolding, not a static graph or dashboard. Added three generated scene backdrops for the daily, lifetime, and recurring views. Kept the deterministic map layer over the artwork so routes, remembered landmarks, replay, lucid mode, and memory opening remain interactive.
