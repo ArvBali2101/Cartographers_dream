@@ -50,13 +50,26 @@ func _process(delta: float) -> void:
 	death_notice_time = maxf(0.0, death_notice_time - delta)
 	if state in [GameState.ENDING, GameState.STING]:
 		ending_timer += delta
+	if state in [GameState.INTRO, GameState.CUT_ONE, GameState.CUT_TWO]:
+		cut_timer += delta
+		if cut_timer >= 8.0:
+			_advance_cutscene()
 	if state in [GameState.JUNGLE, GameState.SEA, GameState.NIGHTMARE]:
 		run_time += delta
 		level_time += delta
 		_update_level(delta)
 	queue_redraw()
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		if state == GameState.MENU and not settings_open:
+			_start_expedition()
+		elif state in [GameState.INTRO, GameState.CUT_ONE, GameState.CUT_TWO]:
+			_advance_cutscene()
+		elif state == GameState.ENDING:
+			state = GameState.STING
+			ending_timer = 0.0
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
 			if state != GameState.MENU:
@@ -315,10 +328,10 @@ func _draw_menu() -> void:
 		draw_rect(Rect2(375, 170, 530, 370), Color("#191613"), true)
 		draw_rect(Rect2(375, 170, 530, 370), Color("#7f7058"), false, 1.0)
 		draw_string(ThemeDB.fallback_font, Vector2(420, 230), "SETTINGS", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, PAPER)
-	var settings := ["Master Volume     100%", "Music Volume      70%", "Whispers Volume   80%", "Screen Shake      " + ("ON" if screen_shake > 0.5 else "OFF"), "Show Speedrun Timer " + ("ON" if timer_visible else "OFF")]
-	for i in settings.size():
-		draw_string(ThemeDB.fallback_font, Vector2(430, 285 + i * 38), settings[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#c8b99b"))
-	draw_string(ThemeDB.fallback_font, Vector2(430, 490), "ENTER toggles timer   S toggles shake   ESC closes", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#716657"))
+		var settings := ["Master Volume     100%", "Music Volume      70%", "Whispers Volume   80%", "Screen Shake      " + ("ON" if screen_shake > 0.5 else "OFF"), "Show Speedrun Timer " + ("ON" if timer_visible else "OFF")]
+		for i in settings.size():
+			draw_string(ThemeDB.fallback_font, Vector2(430, 285 + i * 38), settings[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#c8b99b"))
+		draw_string(ThemeDB.fallback_font, Vector2(430, 490), "ENTER toggles timer   S toggles shake   ESC closes", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#716657"))
 
 func _draw_cutscene(lines: Array[String]) -> void:
 	draw_rect(Rect2(0, 0, W, H), Color("#110f0c"))
@@ -353,7 +366,9 @@ func _draw_cutscene(lines: Array[String]) -> void:
 			draw_line(Vector2(520, 350), Vector2(850, 220), BLOOD, 3.0)
 	var text := lines[panel % lines.size()]
 	draw_string(ThemeDB.fallback_font, Vector2(170, 590), text, HORIZONTAL_ALIGNMENT_CENTER, 940, 22, Color("#d6c6a3"))
-	draw_string(ThemeDB.fallback_font, Vector2(535, 650), "E / SPACE  CONTINUE", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#6d6354"))
+	draw_rect(Rect2(475, 625, 330, 34), Color(0.03, 0.02, 0.015, 0.82), true)
+	draw_rect(Rect2(475, 625, 330, 34), Color(0.75, 0.64, 0.43, 0.35), false, 1.0)
+	draw_string(ThemeDB.fallback_font, Vector2(540, 647), "CLICK  /  E  /  SPACE  CONTINUE", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#d6c6a3"))
 	if state != GameState.INTRO:
 		draw_string(ThemeDB.fallback_font, Vector2(32, 38), "MAP", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#756958"))
 
