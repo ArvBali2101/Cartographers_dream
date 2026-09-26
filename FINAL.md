@@ -32,3 +32,4 @@ DreamScape is a dark, dreamlike cartography prototype for saving dreams as scene
 Private live demo: https://dreamscape-cs-hackathon.baliarv21.chatgpt.site
 - Cinematic scene layer: each view now has its own full-screen dream artwork. Tonight shows a complete journey, Lifetime shows the expanding world, and Most Recurring shows the repeating school/corridor/flight sequence.
 - Scene artwork lives in `public/scenes/daily.png`, `public/scenes/lifetime.png`, and `public/scenes/recurring.png`.
+- Location portals: selecting a landmark now enters it as the next scene. The selected location becomes the cinematic focus, surrounding map elements fade back, and the player can continue moving through that location with the scene intro and HUD.
