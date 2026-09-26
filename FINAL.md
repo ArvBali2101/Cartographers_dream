@@ -1,6 +1,6 @@
 # DreamScape — current final state
 
-DreamScape is a dark, dreamlike cartography prototype for mapping the persistent world a person visits while sleeping.
+DreamScape is a dark, dreamlike cartography prototype for saving dreams as scenes, connecting them into a lifetime world, and isolating the dream that returns most often.
 
 ## Current experience
 
@@ -11,6 +11,7 @@ DreamScape is a dark, dreamlike cartography prototype for mapping the persistent
 - Play mode: select “Enter dream,” move Maya with WASD/arrow keys, hold Shift to move faster, click landmarks, and press Esc to exit.
 - Gameplay pass: entering the dream opens a short cinematic intro, movement leaves a glowing trail, nearby landmarks trigger memory cards, and the world atmosphere reacts to doors, water, and flight zones.
 - Memory interaction: “Open memory” and in-world landmark clicks open a focused memory modal without leaving the playable world.
+- Three-scene model: Tonight’s Dream Scene, Lifetime World, and Most Recurring Dream are separate views with distinct map data and narrative purpose.
 
 ## Product decisions
 

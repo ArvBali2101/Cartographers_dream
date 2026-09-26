@@ -33,3 +33,12 @@
 - Added an in-world memory modal with the selected place, visit count, first-seen date, mood, and a continue-exploring action.
 - Landmark clicks in game mode now open the same memory modal directly.
 - Build passed and the local route returned HTTP 200 after the fix.
+
+## 2026-09-26 — Three-scene product model
+
+- Reframed the product around three explicit views: Tonight’s Dream Scene, Maya’s Lifetime Dreamscape, and The Most Recurring Dream.
+- Tonight’s scene now shows the complete route from the current dream as its own contained world.
+- Lifetime World remains the continuously growing geography that connects every saved dream.
+- Most Recurring Dream is a separate composite scene that gathers the repeated school/corridor/roof/flight pattern into one playable loop.
+- Added clear scene navigation, scene-specific landmarks, copy, routes, stats, and gameplay entry points so the product no longer treats all dreams as one undifferentiated map.
+- Build passed and the local route returned HTTP 200 after the restructure.
