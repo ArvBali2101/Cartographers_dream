@@ -34,6 +34,8 @@ var menu_choice := 0
 var settings_open := false
 var flash := 0.0
 var whisper_phase := 0.0
+var death_notice := ""
+var death_notice_time := 0.0
 
 func _ready() -> void:
 	queue_redraw()
@@ -41,6 +43,9 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	whisper_phase += delta
 	flash = maxf(0.0, flash - delta * 2.5)
+	death_notice_time = maxf(0.0, death_notice_time - delta)
+	if state in [GameState.ENDING, GameState.STING]:
+		ending_timer += delta
 	if state in [GameState.JUNGLE, GameState.SEA, GameState.NIGHTMARE]:
 		run_time += delta
 		level_time += delta
@@ -60,6 +65,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif state in [GameState.CUT_ONE, GameState.CUT_TWO]:
 			if event.keycode in [KEY_E, KEY_SPACE, KEY_ENTER]:
 				_advance_cutscene()
+		elif state == GameState.JUNGLE and event.keycode == KEY_E:
+			_interact_jungle()
 		elif state == GameState.ENDING:
 			if event.keycode in [KEY_E, KEY_SPACE, KEY_ENTER]:
 				state = GameState.STING
@@ -100,7 +107,9 @@ func _start_expedition() -> void:
 func _advance_cutscene() -> void:
 	cut_index += 1
 	cut_timer = 0.0
-	if state == GameState.CUT_ONE and cut_index > 2:
+	if state == GameState.INTRO and cut_index > 6:
+		_start_jungle()
+	elif state == GameState.CUT_ONE and cut_index > 2:
 		_start_sea()
 	elif state == GameState.CUT_TWO and cut_index > 2:
 		_start_nightmare()
@@ -168,7 +177,7 @@ func _update_jungle(delta: float) -> void:
 		figure.y += sin(level_time * 2.0) * 18.0 * delta
 	if figure.x > WORLD.end.x + 60.0:
 		figure = Vector2(835, 260)
-	if player.distance_to(Vector2(1020, 155)) < 42.0:
+	if player.distance_to(Vector2(1020, 155)) < 42.0 and marker_seen >= 2:
 		_start_cut_one()
 	if level_time > 42.0:
 		minimap_wrong = true
@@ -189,7 +198,7 @@ func _update_sea(delta: float) -> void:
 	if ship.distance_to(Vector2(1080, 170)) < 52.0:
 		_start_cut_two()
 	if horror_level >= 1.0:
-		dead_message = "DROWNED"
+		_register_death("DROWNED")
 		_start_sea()
 		flash = 1.0
 
@@ -210,7 +219,7 @@ func _update_nightmare(delta: float) -> void:
 	if witness.x > -100:
 		witness = witness.move_toward(player, delta * (65.0 + horror_level * 50.0))
 		if witness.distance_to(player) < 30.0:
-			dead_message = "SEEN"
+			_register_death("SEEN")
 			_start_nightmare()
 			flash = 1.0
 	if player.distance_to(Vector2(1080, 145)) < 50.0:
@@ -230,6 +239,22 @@ func _start_cut_two() -> void:
 	state = GameState.CUT_TWO
 	cut_index = 0
 	cut_timer = 0.0
+
+func _interact_jungle() -> void:
+	if player.distance_to(Vector2(440, 405)) < 65.0:
+		marker_seen = max(marker_seen, 1)
+	elif player.distance_to(Vector2(685, 205)) < 65.0:
+		marker_seen = max(marker_seen, 2)
+	elif player.distance_to(Vector2(830, 395)) < 65.0:
+		marker_seen = max(marker_seen, 3)
+		if not note_changed:
+			note_changed = true
+	elif player.distance_to(Vector2(1020, 155)) < 65.0 and marker_seen >= 2:
+		_start_cut_one()
+
+func _register_death(message: String) -> void:
+	death_notice = message
+	death_notice_time = 1.8
 
 func _in_forest(point: Vector2) -> bool:
 	return point.x > 250.0 and point.x < 580.0 and point.y > 180.0 and point.y < 570.0
@@ -260,6 +285,9 @@ func _draw() -> void:
 		_draw_ending()
 	else:
 		_draw_sting()
+	if death_notice_time > 0.0:
+		draw_rect(Rect2(0, 0, W, H), Color(0.02, 0.0, 0.0, 0.35), true)
+		draw_string(ThemeDB.fallback_font, Vector2(520, 360), death_notice, HORIZONTAL_ALIGNMENT_LEFT, -1, 34, Color("#e0d0b0"))
 	if flash > 0.0:
 		draw_rect(Rect2(0, 0, W, H), Color(1, 1, 1, flash * 0.18))
 
@@ -320,7 +348,7 @@ func _draw_jungle() -> void:
 	draw_line(Vector2(160, 560), Vector2(1020, 155), Color("#a97749"), 13.0)
 	_draw_marker(Vector2(440, 405), "EXPEDITION I", "NORTH SURVEY")
 	_draw_marker(Vector2(685, 205), "EXPEDITION II", "NO RECORD")
-	_draw_marker(Vector2(830, 395), "EXPEDITION IV", "DO NOT CONTINUE")
+	_draw_marker(Vector2(830, 395), "EXPEDITION IV", "DON'T FOLLOW IT" if note_changed else "DO NOT CONTINUE")
 	draw_string(ThemeDB.fallback_font, Vector2(1000, 125), "SURVEY COMPLETE", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#5d4e3b"))
 	_draw_figure()
 	_draw_player(player, Color("#332b21"))
@@ -330,6 +358,10 @@ func _draw_jungle() -> void:
 		_draw_prompt("[E]  EXAMINE  ·  EXPEDITION I")
 	if player.distance_to(Vector2(685, 205)) < 55.0:
 		_draw_prompt("[E]  EXAMINE  ·  EXPEDITION II")
+	if player.distance_to(Vector2(830, 395)) < 55.0:
+		_draw_prompt("[E]  EXAMINE  ·  " + ("DON'T FOLLOW IT" if note_changed else "EXPEDITION IV"))
+	if marker_seen < 2:
+		draw_string(ThemeDB.fallback_font, Vector2(420, 105), "Find the first two records before the survey can be completed.", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#5d4e3b"))
 
 func _draw_sea() -> void:
 	draw_rect(WORLD, Color("#213b43"), true)
