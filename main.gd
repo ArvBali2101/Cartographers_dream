@@ -40,6 +40,9 @@ var flash := 0.0
 var whisper_phase := 0.0
 var death_notice := ""
 var death_notice_time := 0.0
+var dialogue_visible := false
+var dialogue_title := ""
+var dialogue_body := ""
 
 func _ready() -> void:
 	queue_redraw()
@@ -61,6 +64,14 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _input(event: InputEvent) -> void:
+	if dialogue_visible:
+		if (event is InputEventKey and event.pressed and not event.echo) or (event is InputEventMouseButton and event.pressed):
+			dialogue_visible = false
+			if dialogue_title == "SURVEY COMPLETE":
+				_start_cut_one()
+			elif dialogue_title == "LIGHTHOUSE":
+				_start_cut_two()
+			return
 	if event is InputEventMouseButton and event.pressed:
 		if state == GameState.MENU and not settings_open:
 			_start_expedition()
@@ -84,6 +95,8 @@ func _input(event: InputEvent) -> void:
 				_advance_cutscene()
 		elif state == GameState.JUNGLE and event.keycode == KEY_E:
 			_interact_jungle()
+		elif state == GameState.SEA and event.keycode == KEY_E:
+			_interact_sea()
 		elif state == GameState.ENDING:
 			if event.keycode in [KEY_E, KEY_SPACE, KEY_ENTER]:
 				state = GameState.STING
@@ -139,6 +152,7 @@ func _start_jungle() -> void:
 	marker_seen = 0
 	note_changed = false
 	minimap_wrong = false
+	dialogue_visible = false
 
 func _start_sea() -> void:
 	state = GameState.SEA
@@ -146,6 +160,7 @@ func _start_sea() -> void:
 	level_time = 0.0
 	horror_level = 0.0
 	dead_message = ""
+	dialogue_visible = false
 
 func _start_nightmare() -> void:
 	state = GameState.NIGHTMARE
@@ -156,8 +171,11 @@ func _start_nightmare() -> void:
 	horror_level = 0.35
 	level_time = 0.0
 	minimap_wrong = true
+	dialogue_visible = false
 
 func _update_level(delta: float) -> void:
+	if dialogue_visible:
+		return
 	if state == GameState.JUNGLE:
 		_update_jungle(delta)
 	elif state == GameState.SEA:
@@ -186,7 +204,9 @@ func _update_jungle(delta: float) -> void:
 		speed *= 0.65
 	elif _on_path(player):
 		speed *= 1.1
-	player += direction * speed * delta
+	var next_position := player + direction * speed * delta
+	if not _in_jungle_river(next_position):
+		player = next_position
 	player.x = clampf(player.x, WORLD.position.x + 18.0, WORLD.end.x - 18.0)
 	player.y = clampf(player.y, WORLD.position.y + 18.0, WORLD.end.y - 18.0)
 	if player.distance_to(figure) < 110.0:
@@ -195,7 +215,7 @@ func _update_jungle(delta: float) -> void:
 	if figure.x > WORLD.end.x + 60.0:
 		figure = Vector2(835, 260)
 	if player.distance_to(Vector2(1020, 155)) < 42.0 and marker_seen >= 2:
-		_start_cut_one()
+		pass
 	if level_time > 42.0:
 		minimap_wrong = true
 	if player.distance_to(Vector2(440, 405)) < 45.0:
@@ -213,7 +233,7 @@ func _update_sea(delta: float) -> void:
 	if _in_water_obstacle(ship):
 		ship -= direction * speed * delta * 1.5
 	if ship.distance_to(Vector2(1080, 170)) < 52.0:
-		_start_cut_two()
+		pass
 	if horror_level >= 1.0:
 		_register_death("DROWNED")
 		_start_sea()
@@ -224,7 +244,9 @@ func _update_nightmare(delta: float) -> void:
 	var speed := 175.0 + horror_level * 90.0
 	if Input.is_key_pressed(KEY_SHIFT):
 		speed *= 1.25
-	player += direction * speed * delta
+	var next_position := player + direction * speed * delta
+	if not _in_nightmare_wall(next_position):
+		player = next_position
 	player.x = clampf(player.x, WORLD.position.x + 14.0, WORLD.end.x - 14.0)
 	player.y = clampf(player.y, WORLD.position.y + 14.0, WORLD.end.y - 14.0)
 	horror_level = minf(1.0, horror_level + delta * 0.012)
@@ -247,6 +269,19 @@ func _next_figure_point() -> Vector2:
 	var points := [Vector2(440, 160), Vector2(700, 500), Vector2(930, 260), Vector2(1080, 145)]
 	return points[min(checkpoint, points.size() - 1)]
 
+func _in_nightmare_wall(point: Vector2) -> bool:
+	var walls := [
+		Rect2(300, 105, 34, 230),
+		Rect2(500, 285, 260, 34),
+		Rect2(845, 100, 34, 250),
+		Rect2(250, 470, 300, 34),
+		Rect2(690, 500, 34, 140)
+	]
+	for wall in walls:
+		if wall.grow(12.0).has_point(point):
+			return true
+	return false
+
 func _start_cut_one() -> void:
 	state = GameState.CUT_ONE
 	cut_index = 0
@@ -260,14 +295,30 @@ func _start_cut_two() -> void:
 func _interact_jungle() -> void:
 	if player.distance_to(Vector2(440, 405)) < 65.0:
 		marker_seen = max(marker_seen, 1)
+		_show_dialogue("EXPEDITION I", "NORTH SURVEY\nThe paper is dry. The ink is fresh.\n\nThere should be no expedition before ours.")
 	elif player.distance_to(Vector2(685, 205)) < 65.0:
 		marker_seen = max(marker_seen, 2)
+		_show_dialogue("EXPEDITION II", "NO RECORD\nA second marker, older than the camp.\n\nThe route on your map is wrong by thirty paces.")
 	elif player.distance_to(Vector2(830, 395)) < 65.0:
 		marker_seen = max(marker_seen, 3)
 		if not note_changed:
 			note_changed = true
+		_show_dialogue("EXPEDITION IV", "DON'T FOLLOW IT\nThe words were not there when you first looked.\n\nWhere is Expedition III?")
 	elif player.distance_to(Vector2(1020, 155)) < 65.0 and marker_seen >= 2:
-		_start_cut_one()
+		_show_dialogue("SURVEY COMPLETE", "The normal level-complete sound begins.\nIt stops halfway.\n\nSomething else is drawing a second route toward you.")
+
+func _interact_sea() -> void:
+	if ship.distance_to(Vector2(470, 250)) < 90.0:
+		_show_dialogue("BONE ISLAND", "The bones are too large for any animal you know.\n\nSomething has been walking on this island.")
+	elif ship.distance_to(Vector2(770, 440)) < 105.0:
+		_show_dialogue("WRECK", "The expedition symbol is carved into the mast.\n\nThe wood is older than the expedition.")
+	elif ship.distance_to(Vector2(1080, 170)) < 80.0:
+		_show_dialogue("LIGHTHOUSE", "The water becomes completely still.\nThe whispers stop.\n\nA voice beneath the lighthouse asks: do you want to leave?")
+
+func _show_dialogue(title: String, body: String) -> void:
+	dialogue_title = title
+	dialogue_body = body
+	dialogue_visible = true
 
 func _register_death(message: String) -> void:
 	death_notice = message
@@ -275,6 +326,13 @@ func _register_death(message: String) -> void:
 
 func _in_forest(point: Vector2) -> bool:
 	return point.x > 250.0 and point.x < 580.0 and point.y > 180.0 and point.y < 570.0
+
+func _in_jungle_river(point: Vector2) -> bool:
+	var river_center := 620.0 + sin((point.y - 100.0) / 120.0) * 32.0
+	var river := absf(point.x - river_center) < 36.0
+	var bridge_one := point.distance_to(Vector2(620, 280)) < 48.0
+	var bridge_two := point.distance_to(Vector2(610, 520)) < 48.0
+	return river and not bridge_one and not bridge_two
 
 func _on_path(point: Vector2) -> bool:
 	return absf(point.y - (570.0 - point.x * 0.25)) < 28.0 or absf(point.x - 650.0) < 24.0
@@ -302,6 +360,8 @@ func _draw() -> void:
 		_draw_ending()
 	else:
 		_draw_sting()
+	if dialogue_visible:
+		_draw_dialogue()
 	if death_notice_time > 0.0:
 		draw_rect(Rect2(0, 0, W, H), Color(0.02, 0.0, 0.0, 0.35), true)
 		draw_string(ThemeDB.fallback_font, Vector2(520, 360), death_notice, HORIZONTAL_ALIGNMENT_LEFT, -1, 34, Color("#e0d0b0"))
@@ -391,6 +451,8 @@ func _draw_jungle() -> void:
 		_draw_prompt("[E]  EXAMINE  ·  EXPEDITION II")
 	if player.distance_to(Vector2(830, 395)) < 55.0:
 		_draw_prompt("[E]  EXAMINE  ·  " + ("DON'T FOLLOW IT" if note_changed else "EXPEDITION IV"))
+	if player.distance_to(Vector2(1020, 155)) < 65.0 and marker_seen >= 2:
+		_draw_prompt("[E]  COMPLETE SURVEY  ·  " + str(marker_seen) + "/2 RECORDS FOUND")
 	if marker_seen < 2:
 		draw_string(ThemeDB.fallback_font, Vector2(420, 105), "Find the first two records before the survey can be completed.", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#5d4e3b"))
 
@@ -402,6 +464,12 @@ func _draw_sea() -> void:
 	_draw_ship(ship)
 	_draw_hud("THE DROWNED MAP", "Reach the lighthouse. The whispers are the timer.")
 	_draw_horror_overlay()
+	if ship.distance_to(Vector2(470, 250)) < 90.0:
+		_draw_prompt("[E]  EXAMINE  ·  BONE ISLAND")
+	if ship.distance_to(Vector2(770, 440)) < 105.0:
+		_draw_prompt("[E]  EXAMINE  ·  WRECK")
+	if ship.distance_to(Vector2(1080, 170)) < 80.0:
+		_draw_prompt("[E]  ENTER THE LIGHTHOUSE")
 	if timer_visible:
 		draw_string(ThemeDB.fallback_font, Vector2(1080, 42), _format_time(run_time), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("#c7b693"))
 
@@ -454,6 +522,15 @@ func _draw_hud(title: String, subtitle: String) -> void:
 func _draw_prompt(text: String) -> void:
 	draw_rect(Rect2(370, 610, 540, 35), Color(0.06, 0.04, 0.035, 0.9), true)
 	draw_string(ThemeDB.fallback_font, Vector2(390, 634), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("#e0d0ad"))
+
+func _draw_dialogue() -> void:
+	draw_rect(Rect2(0, 0, W, H), Color(0.01, 0.008, 0.006, 0.35), true)
+	draw_rect(Rect2(210, 425, 860, 190), Color("#17120f"), true)
+	draw_rect(Rect2(210, 425, 860, 190), Color(0.78, 0.66, 0.43, 0.65), false, 2.0)
+	draw_string(ThemeDB.fallback_font, Vector2(245, 465), dialogue_title, HORIZONTAL_ALIGNMENT_LEFT, -1, 21, Color("#f0dfb7"))
+	draw_line(Vector2(245, 485), Vector2(1035, 485), Color(0.76, 0.65, 0.44, 0.35), 1.0)
+	draw_string(ThemeDB.fallback_font, Vector2(245, 520), dialogue_body, HORIZONTAL_ALIGNMENT_LEFT, 750, 15, Color("#cfc0a2"))
+	draw_string(ThemeDB.fallback_font, Vector2(825, 585), "CLICK / E  CLOSE", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#9e8c6c"))
 
 func _draw_minimap() -> void:
 	var mini := Rect2(1010, 90, 160, 120)
