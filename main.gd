@@ -12,6 +12,10 @@ const INK := Color("#181414")
 const PAPER := Color("#d3c3a4")
 const BLOOD := Color("#7e2929")
 
+var jungle_bg: Texture2D = preload("res://art/jungle.png")
+var sea_bg: Texture2D = preload("res://art/sea.png")
+var nightmare_bg: Texture2D = preload("res://art/nightmare.png")
+
 var state: GameState = GameState.MENU
 var player := Vector2(170, 550)
 var ship := Vector2(150, 520)
@@ -292,17 +296,21 @@ func _draw() -> void:
 		draw_rect(Rect2(0, 0, W, H), Color(1, 1, 1, flash * 0.18))
 
 func _draw_menu() -> void:
-	draw_rect(Rect2(0, 0, W, H), Color("#11100d"))
+	draw_texture_rect(jungle_bg, Rect2(0, 0, W, H), false)
+	draw_rect(Rect2(0, 0, W, H), Color(0.015, 0.012, 0.01, 0.68), true)
+	draw_rect(Rect2(0, 0, W, H), Color(0.02, 0.01, 0.01, 0.28), false, 12.0)
 	for i in range(16):
 		var x := float((i * 137) % 1280)
-		draw_circle(Vector2(x, 100 + sin(i * 2.1) * 70.0), 1.5, Color(0.65, 0.57, 0.42, 0.25))
-	draw_string(ThemeDB.fallback_font, Vector2(545, 260), "MAP", HORIZONTAL_ALIGNMENT_LEFT, -1, 84, PAPER)
-	draw_string(ThemeDB.fallback_font, Vector2(468, 310), "AN EXPEDITION INTO THE UNKNOWN", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("#766c5e"))
+		draw_circle(Vector2(x, 100 + sin(i * 2.1) * 70.0), 1.5, Color(0.95, 0.82, 0.55, 0.5))
+	draw_string(ThemeDB.fallback_font, Vector2(538, 250), "MAP", HORIZONTAL_ALIGNMENT_LEFT, -1, 92, Color(0.95, 0.88, 0.72, 0.95))
+	draw_string(ThemeDB.fallback_font, Vector2(475, 300), "AN EXPEDITION INTO THE UNKNOWN", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("#d2c09b"))
+	draw_line(Vector2(435, 327), Vector2(845, 327), Color(0.83, 0.7, 0.46, 0.5), 1.0)
+	draw_string(ThemeDB.fallback_font, Vector2(445, 365), "THE BLANK REGION IS NOT EMPTY", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#9d8e72"))
 	var items := ["BEGIN EXPEDITION", "SETTINGS", "QUIT"]
 	for i in items.size():
 		var color := Color("#ede2c5") if i == menu_choice else Color("#6e6558")
 		draw_string(ThemeDB.fallback_font, Vector2(520, 415 + i * 48), ("> " if i == menu_choice else "  ") + items[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 17, color)
-	draw_string(ThemeDB.fallback_font, Vector2(470, 640), "WASD / ARROWS  SELECT     ENTER  CONFIRM", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#514a40"))
+	draw_string(ThemeDB.fallback_font, Vector2(468, 640), "WASD / ARROWS  SELECT     ENTER  CONFIRM", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#d0bd95"))
 	if settings_open:
 		draw_rect(Rect2(375, 170, 530, 370), Color("#191613"), true)
 		draw_rect(Rect2(375, 170, 530, 370), Color("#7f7058"), false, 1.0)
@@ -320,13 +328,22 @@ func _draw_cutscene(lines: Array[String]) -> void:
 	var panel_rect := Rect2(170, 90, 940, 430)
 	draw_rect(panel_rect, Color("#3a3328"), true)
 	if panel == 0:
-		_draw_trees(panel_rect, 45)
+		if state == GameState.INTRO:
+			draw_texture_rect(jungle_bg, panel_rect, false)
+		else:
+			draw_texture_rect(sea_bg, panel_rect, false)
+		draw_rect(panel_rect, Color(0.02, 0.015, 0.01, 0.22), true)
 	elif panel == 1:
-		_draw_map_texture(panel_rect, Color("#9f906f"))
+		if state == GameState.INTRO:
+			draw_texture_rect(jungle_bg, panel_rect, false)
+		else:
+			draw_texture_rect(sea_bg, panel_rect, false)
+		draw_rect(panel_rect, Color(0.05, 0.04, 0.03, 0.35), true)
 	elif panel == 2:
 		_draw_cartographer(panel_rect.get_center(), false)
 	elif panel == 3:
-		_draw_trees(panel_rect, 20)
+		draw_texture_rect(jungle_bg, panel_rect, false)
+		draw_rect(panel_rect, Color(0.01, 0.01, 0.01, 0.32), true)
 		draw_circle(Vector2(640, 385), 32, Color("#cb773c"))
 	elif panel == 4:
 		_draw_cartographer(Vector2(640, 355), true)
@@ -341,11 +358,10 @@ func _draw_cutscene(lines: Array[String]) -> void:
 		draw_string(ThemeDB.fallback_font, Vector2(32, 38), "MAP", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#756958"))
 
 func _draw_jungle() -> void:
-	draw_rect(WORLD, Color("#bbaa86"), true)
-	_draw_contours()
-	_draw_trees(WORLD, 56)
-	_draw_river()
-	draw_line(Vector2(160, 560), Vector2(1020, 155), Color("#a97749"), 13.0)
+	draw_texture_rect(jungle_bg, WORLD, false)
+	draw_rect(WORLD, Color(0.04, 0.07, 0.05, 0.18), true)
+	draw_rect(WORLD, Color(0.02, 0.02, 0.015, 0.18), false, 3.0)
+	draw_line(Vector2(160, 560), Vector2(1020, 155), Color(0.85, 0.7, 0.42, 0.35), 4.0)
 	_draw_marker(Vector2(440, 405), "EXPEDITION I", "NORTH SURVEY")
 	_draw_marker(Vector2(685, 205), "EXPEDITION II", "NO RECORD")
 	_draw_marker(Vector2(830, 395), "EXPEDITION IV", "DON'T FOLLOW IT" if note_changed else "DO NOT CONTINUE")
@@ -364,12 +380,8 @@ func _draw_jungle() -> void:
 		draw_string(ThemeDB.fallback_font, Vector2(420, 105), "Find the first two records before the survey can be completed.", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#5d4e3b"))
 
 func _draw_sea() -> void:
-	draw_rect(WORLD, Color("#213b43"), true)
-	for y in range(110, 650, 34):
-		draw_line(Vector2(90, y), Vector2(1190, y + sin(y) * 5), Color(0.35, 0.56, 0.57, 0.18), 1.0)
-	_draw_island(Vector2(470, 250), 58, "BONES")
-	_draw_island(Vector2(770, 440), 75, "WRECK")
-	_draw_island(Vector2(960, 260), 45, "")
+	draw_texture_rect(sea_bg, WORLD, false)
+	draw_rect(WORLD, Color(0.01, 0.04, 0.05, 0.16), true)
 	_draw_lighthouse(Vector2(1080, 170))
 	_draw_tentacles()
 	_draw_ship(ship)
@@ -379,13 +391,8 @@ func _draw_sea() -> void:
 		draw_string(ThemeDB.fallback_font, Vector2(1080, 42), _format_time(run_time), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("#c7b693"))
 
 func _draw_nightmare() -> void:
-	draw_rect(WORLD, Color("#20191b"), true)
-	for i in range(13):
-		var x := 115.0 + i * 85.0
-		draw_line(Vector2(x, 100), Vector2(x + sin(i * 3.0) * 44.0, 640), Color(0.25, 0.15, 0.17, 0.75), 3.0)
-	for i in range(10):
-		var y := 130.0 + i * 52.0
-		draw_line(Vector2(90, y), Vector2(1180, y + cos(i * 1.7) * 32.0), Color(0.18, 0.12, 0.14, 0.8), 3.0)
+	draw_texture_rect(nightmare_bg, WORLD, false)
+	draw_rect(WORLD, Color(0.08, 0.01, 0.04, 0.2), true)
 	_draw_figure()
 	if witness.x > -100:
 		draw_circle(witness, 34.0 + horror_level * 20.0, Color(0.01, 0.005, 0.008, 0.85))
@@ -416,12 +423,18 @@ func _draw_sting() -> void:
 		draw_string(ThemeDB.fallback_font, Vector2(535, 610), "MAP", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, PAPER)
 
 func _draw_hud(title: String, subtitle: String) -> void:
-	draw_rect(Rect2(0, 0, W, 72), Color(0.05, 0.04, 0.035, 0.88), true)
-	draw_string(ThemeDB.fallback_font, Vector2(28, 32), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("#d6c6a4"))
-	draw_string(ThemeDB.fallback_font, Vector2(28, 54), subtitle, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#847866"))
+	draw_rect(Rect2(0, 0, W, 78), Color(0.025, 0.02, 0.018, 0.9), true)
+	draw_line(Vector2(24, 67), Vector2(W - 24, 67), Color(0.72, 0.61, 0.42, 0.22), 1.0)
+	draw_string(ThemeDB.fallback_font, Vector2(28, 31), "MAP", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#9f8c69"))
+	draw_string(ThemeDB.fallback_font, Vector2(28, 55), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("#eee0bf"))
+	draw_string(ThemeDB.fallback_font, Vector2(315, 53), subtitle, HORIZONTAL_ALIGNMENT_LEFT, 560, 11, Color("#a99b80"))
+	draw_rect(Rect2(1030, 23, 210, 32), Color(0.12, 0.08, 0.06, 0.82), true)
+	draw_string(ThemeDB.fallback_font, Vector2(1045, 44), "FIELD NOTES  /  NIGHT 02", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#c9b891"))
 	if timer_visible:
-		draw_string(ThemeDB.fallback_font, Vector2(1090, 39), _format_time(run_time), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("#d2c09e"))
-	draw_string(ThemeDB.fallback_font, Vector2(1080, 665), "WASD move   SHIFT sprint   E interact   F2 timer", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#776c5c"))
+		draw_string(ThemeDB.fallback_font, Vector2(1075, 85), _format_time(run_time), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("#f0d18d"))
+	draw_rect(Rect2(24, 610, 290, 38), Color(0.025, 0.02, 0.018, 0.78), true)
+	draw_rect(Rect2(24, 610, 290, 38), Color(0.72, 0.61, 0.42, 0.2), false, 1.0)
+	draw_string(ThemeDB.fallback_font, Vector2(40, 634), "WASD MOVE    SHIFT SPRINT    E EXAMINE", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#c7b893"))
 
 func _draw_prompt(text: String) -> void:
 	draw_rect(Rect2(370, 610, 540, 35), Color(0.06, 0.04, 0.035, 0.9), true)

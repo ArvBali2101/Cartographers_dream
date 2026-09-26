@@ -6,3 +6,4 @@
 - The minimap should represent remembered geography rather than objective truth; small discrepancies create psychological horror without complicated simulation.
 - Speedrunning works best when the timer is hidden by default and the player reads urgency through sound and escalating world behaviour.
 - Still illustrated cutscenes are a better hackathon tradeoff than full animation: they preserve pacing and narrative while keeping the game finishable.
+- The strongest visual upgrade was replacing procedural placeholder terrain with a small number of authored-looking panoramic level plates, then keeping gameplay sprites and markers on top for clarity.
