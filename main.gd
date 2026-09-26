@@ -411,7 +411,7 @@ func _draw_horror_overlay() -> void:
 	draw_rect(Rect2(0, 0, W, 80), Color(0.15, 0.01, 0.02, edge), true)
 	draw_rect(Rect2(0, 640, W, 80), Color(0.15, 0.01, 0.02, edge), true)
 	if horror_level > 0.3:
-		var whisper := ["keep going", "don't look", "he's awake", "wrong way", "closer", "we remember"][int(whisper_phase * 0.6) % 6]
+		var whisper: String = ["keep going", "don't look", "he's awake", "wrong way", "closer", "we remember"][int(whisper_phase * 0.6) % 6]
 		draw_string(ThemeDB.fallback_font, Vector2(580, 110), whisper, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.55, 0.44, 0.42, horror_level * 0.7))
 
 func _draw_player(pos: Vector2, color: Color) -> void:

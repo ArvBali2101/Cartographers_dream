@@ -22,3 +22,4 @@ Menu → Opening panels → The Map (jungle) → cutscene → The Drowned Map (s
 - `Main.tscn` — single entry scene.
 - `main.gd` — procedural renderer, state machine, level logic, interactions, cutscenes, and UI.
 - External art and audio can be layered in later without changing the game flow.
+- Godot 4.7 stable is available directly in the project folder under `Godot_v4.7-stable/`; the downloaded archive is `Godot_v4.7-stable_win64.exe.zip`.

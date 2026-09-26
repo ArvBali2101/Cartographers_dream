@@ -12,3 +12,4 @@
 ## Current state
 
 - The project is source-complete for a playable prototype but Godot is not installed in the current environment, so runtime verification must be performed in Godot.
+- Godot 4.7 stable Windows editor was downloaded and extracted directly into the project folder. The editor’s headless scan initially caught one strict type inference issue in the whisper system; that was fixed and the second headless scan completed without errors.
