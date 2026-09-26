@@ -5,9 +5,10 @@ DreamScape is a dark, dreamlike cartography prototype for mapping the persistent
 ## Current experience
 
 - Left panel: write a dream, mark the date/lucid state, and map it.
-- Center: an explorable fantasy map with named locations, routes, fog, a “you” marker, timeline, and replay animation.
+- Center: an explorable fantasy map with named locations, routes, fog, a “you” marker, timeline, replay animation, and a full-screen playable mode.
 - Right panel: selected-location history, recurring dream signs, world statistics, and the product principle.
 - Interactive states: map update feedback, landmark selection, World/Lucid/Emotion view toggles, dream-sign highlighting, timeline movement, and replay.
+- Play mode: select “Enter dream,” move Maya with WASD/arrow keys, hold Shift to move faster, click landmarks, and press Esc to exit.
 
 ## Product decisions
 

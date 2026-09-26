@@ -11,8 +11,10 @@
 - `npm run build` completed successfully and the local route returned HTTP 200 from the dev server.
 - The scaffold lint command still reports issues in generated shadcn starter components; the new page’s missing control labels were corrected, but the unused generated component warnings remain outside the prototype scope.
 - The validated source was committed and published as a private Sites deployment at `https://dreamscape-cs-hackathon.baliarv21.chatgpt.site`.
+- Feedback identified that the first version felt like a dashboard rather than a game. A dedicated Enter Dream mode was added: full-screen world view, keyboard movement, player avatar, HUD instructions, Escape exit, and replay-compatible world navigation.
+- The upgraded build completed successfully and the local route returned HTTP 200.
 
 ## Current state
 
-- No external AI, database, embeddings, or authentication are wired yet; the current experience is a polished local prototype with deterministic demo data.
+- No external AI, database, embeddings, or authentication are wired yet; the current experience is a playable local prototype with deterministic demo data.
 - Next likely work: replace demo actions with an extraction API, persist dreams, and add a real world engine while preserving the visual interaction model.
