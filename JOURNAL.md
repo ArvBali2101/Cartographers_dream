@@ -10,6 +10,7 @@
 - The prototype currently includes a synthetic Maya demo world, interactive dream text, map update state, map node selection, World/Lucid/Emotion view toggles, dream-sign selection, timeline slider, and replay animation.
 - `npm run build` completed successfully and the local route returned HTTP 200 from the dev server.
 - The scaffold lint command still reports issues in generated shadcn starter components; the new page’s missing control labels were corrected, but the unused generated component warnings remain outside the prototype scope.
+- The validated source was committed and published as a private Sites deployment at `https://dreamscape-cs-hackathon.baliarv21.chatgpt.site`.
 
 ## Current state
 

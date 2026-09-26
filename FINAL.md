@@ -21,3 +21,7 @@ DreamScape is a dark, dreamlike cartography prototype for mapping the persistent
 - Main experience in `app/page.tsx`.
 - Visual system and responsive behavior in `app/globals.css`.
 - No external credentials or backend required for the current demo.
+
+## Published demo
+
+Private live demo: https://dreamscape-cs-hackathon.baliarv21.chatgpt.site
