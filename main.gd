@@ -12,6 +12,13 @@ const PAPER := Color("#d9c7a1")
 const GOLD := Color("#d9a75e")
 const RED := Color("#9b3b43")
 
+var art = preload("res://world_art.gd").new()
+var ambient: Node
+var facing := 0.0
+var boat_facing := 0.0
+var camera_center := Vector2(640, 360)
+var ship_velocity := Vector2.ZERO
+var sea_deaths := 0
 var state: State = State.MENU
 var menu_index := 0
 var timer_visible := false
@@ -38,19 +45,32 @@ var jungle_records := 0
 var jungle_record_iv_seen := false
 var sea_horror := 0.0
 var sea_hazard_clock := 0.0
+var reveal_time := 0.0
+var god_seen := false
 
 func _ready() -> void:
+	ambient = preload("res://ambient.gd").new()
+	add_child(ambient)
 	queue_redraw()
 
 func _process(delta: float) -> void:
 	screen_time += delta
+	if is_instance_valid(ambient): ambient.mix(state,sea_horror if state==State.SEA else 0.6,delta)
+	if state in [State.ENDING, State.STING]: cut_elapsed += delta
+	var focus := player if state == State.JUNGLE else ship if state == State.SEA else nightmare_player
+	if state in [State.JUNGLE, State.SEA, State.NIGHTMARE]:
+		camera_center = camera_center.lerp(Vector2(clampf(focus.x,442,838),clampf(focus.y,265,455)),1.0-exp(-delta*5.0))
+		var direction := direction_input()
+		if direction.length() > 0:
+			facing = lerp_angle(facing,direction.angle(),1.0-exp(-delta*12))
 	flash = maxf(0.0, flash - delta * 2.0)
 	death_timer = maxf(0.0, death_timer - delta)
+	reveal_time = maxf(0.0,reveal_time-delta)
 	if state in [State.INTRO, State.CUT_ONE, State.CUT_TWO]:
 		cut_elapsed += delta
 		if cut_elapsed > 18.0:
 			advance_cutscene()
-	if state in [State.JUNGLE, State.SEA, State.NIGHTMARE] and not dialogue_open:
+	if state in [State.JUNGLE, State.SEA, State.NIGHTMARE] and not dialogue_open and reveal_time<=0:
 		run_time += delta
 		level_time += delta
 		if state == State.JUNGLE: update_jungle(delta)
@@ -63,7 +83,11 @@ func _input(event: InputEvent) -> void:
 		if is_confirm(event): close_dialogue()
 		return
 	if event is InputEventMouseButton and event.pressed:
-		if state == State.MENU and not settings_open: start_expedition()
+		if state == State.MENU and not settings_open:
+			var mouse := get_global_mouse_position()
+			if Rect2(450,373,380,48).has_point(mouse): start_expedition()
+			elif Rect2(450,423,380,48).has_point(mouse): settings_open = true
+			elif Rect2(450,473,380,48).has_point(mouse): get_tree().quit()
 		elif state in [State.INTRO, State.CUT_ONE, State.CUT_TWO]: advance_cutscene()
 		elif state == State.JUNGLE: interact_jungle()
 		elif state == State.SEA: interact_sea()
@@ -72,7 +96,13 @@ func _input(event: InputEvent) -> void:
 			cut_elapsed = 0.0
 		return
 	if event is not InputEventKey or not event.pressed or event.echo: return
+	if event.keycode == KEY_F2:
+		timer_visible = not timer_visible
+		return
 	if event.keycode == KEY_ESCAPE:
+		if settings_open:
+			settings_open = false
+			return
 		state = State.MENU
 		settings_open = false
 		dialogue_open = false
@@ -94,7 +124,7 @@ func _input(event: InputEvent) -> void:
 
 func is_confirm(event: InputEvent) -> bool:
 	if event is InputEventMouseButton: return event.pressed
-	if event is InputEventKey: return event.keycode in [KEY_E, KEY_SPACE, KEY_ENTER] or event.physical_keycode in [KEY_E, KEY_SPACE, KEY_ENTER]
+	if event is InputEventKey: return event.pressed and not event.echo and (event.keycode in [KEY_E, KEY_SPACE, KEY_ENTER] or event.physical_keycode in [KEY_E, KEY_SPACE, KEY_ENTER])
 	return false
 
 func handle_menu(event: InputEventKey) -> void:
@@ -125,6 +155,8 @@ func advance_cutscene() -> void:
 func start_jungle() -> void:
 	state = State.JUNGLE
 	player = Vector2(130, 570)
+	figure = Vector2(960,290)
+	camera_center = Vector2(442,455)
 	level_time = 0.0
 	jungle_records = 0
 	jungle_record_iv_seen = false
@@ -133,15 +165,20 @@ func start_jungle() -> void:
 func start_sea() -> void:
 	state = State.SEA
 	ship = Vector2(130, 560)
+	ship_velocity = Vector2.ZERO
+	camera_center = Vector2(420,455)
 	level_time = 0.0
 	sea_horror = 0.0
 	sea_hazard_clock = 0.0
 	dialogue_open = false
 
 func start_nightmare() -> void:
+	god_seen = false
+	reveal_time = 0.0
 	state = State.NIGHTMARE
 	nightmare_player = Vector2(130, 570)
-	figure = Vector2(1040, 160)
+	figure = Vector2(215,365)
+	camera_center = Vector2(420,455)
 	witness = Vector2(-500, -500)
 	figure_step = 0
 	level_time = 0.0
@@ -160,7 +197,17 @@ func move_with_walls(pos: Vector2, direction: Vector2, speed: float, walls: Arra
 	next.x = clampf(next.x, PLAY_RECT.position.x + 14.0, PLAY_RECT.end.x - 14.0)
 	next.y = clampf(next.y, PLAY_RECT.position.y + 14.0, PLAY_RECT.end.y - 14.0)
 	for wall in walls:
-		if wall.grow(13.0).has_point(next): return pos
+		if wall.grow(13.0).has_point(next):
+			var horizontal := Vector2(next.x,pos.y)
+			var vertical := Vector2(pos.x,next.y)
+			var x_clear := true
+			var y_clear := true
+			for other in walls:
+				if other.grow(13.0).has_point(horizontal): x_clear = false
+				if other.grow(13.0).has_point(vertical): y_clear = false
+			if x_clear: return horizontal
+			if y_clear: return vertical
+			return pos
 	return next
 
 func jungle_walls() -> Array[Rect2]:
@@ -172,7 +219,7 @@ func update_jungle(delta: float) -> void:
 	if player.distance_to(figure) < 90.0:
 		figure += Vector2(115, sin(screen_time * 2.0) * 20.0) * delta
 		if figure.x > 1140: figure = Vector2(980, 210)
-	if level_time > 32.0: figure = Vector2(835, 355)
+	if level_time > 32.0 and figure.x < 850.0: figure.x += delta * 60.0
 
 func interact_jungle() -> void:
 	if player.distance_to(Vector2(250, 485)) < 70.0:
@@ -185,18 +232,29 @@ func interact_jungle() -> void:
 		jungle_record_iv_seen = true
 		show_dialogue("EXPEDITION IV", "DON'T FOLLOW IT\nThe words were not there when you first looked.\n\nWhere is Expedition III?")
 	elif player.distance_to(Vector2(1090, 160)) < 78.0 and jungle_records >= 2:
-		show_dialogue("SURVEY COMPLETE", "The normal level-complete sound begins.\nIt stops halfway.\n\nA second player marker appears on the remembered map.")
+		show_dialogue("SURVEY COMPLETE", "There is another mark on the paper.\nIt moves when I move.\n\nIt is getting closer.")
 
 func update_sea(delta: float) -> void:
-	var speed := 210.0 if not Input.is_key_pressed(KEY_SHIFT) else 285.0
-	ship = move_with_walls(ship, direction_input(), speed, [], delta)
-	sea_horror = clampf(level_time / 115.0, 0.0, 1.0)
+	var direction := direction_input()
+	var target := direction * (225.0 if not Input.is_key_pressed(KEY_SHIFT) else 295.0)
+	ship_velocity = ship_velocity.move_toward(target,delta*330.0)
+	if ship_velocity.length()>8: boat_facing = lerp_angle(boat_facing,ship_velocity.angle(),1-exp(-delta*4))
+	var previous := ship
+	ship = move_with_walls(ship,ship_velocity.normalized(),ship_velocity.length(),[],delta)
+	for obstacle in [Vector2(340,230),Vector2(690,480),Vector2(1100,175)]:
+		if ship.distance_to(obstacle) < 52.0:
+			ship = previous
+			ship_velocity *= 0.4
+	sea_horror = clampf(level_time/115.0,0,1)
+	if sea_horror>=1.0:
+		register_death("DROWNED")
+		start_sea()
+		return
 	sea_hazard_clock += delta
-	if sea_hazard_clock > 2.4:
-		sea_hazard_clock = 0.0
-		if ship.distance_to(Vector2(720, 220)) < 90.0 or ship.distance_to(Vector2(530, 500)) < 78.0:
-			register_death("DROWNED")
-			start_sea()
+	var hazard_active := fmod(sea_hazard_clock,4.0)>1.8
+	if hazard_active and (ship.distance_to(Vector2(720,220))<43 or ship.distance_to(Vector2(530,500))<36):
+		register_death("DROWNED")
+		start_sea()
 
 func interact_sea() -> void:
 	if ship.distance_to(Vector2(340, 230)) < 90.0: show_dialogue("BONE ISLAND", "The bones are too large for any animal you know.\n\nSomething has been walking on this island.")
@@ -207,18 +265,21 @@ func nightmare_walls() -> Array[Rect2]:
 	return [Rect2(270, 120, 35, 210), Rect2(270, 420, 35, 220), Rect2(470, 270, 270, 35), Rect2(470, 270, 35, 150), Rect2(825, 100, 35, 235), Rect2(825, 440, 35, 210), Rect2(1030, 270, 35, 230), Rect2(590, 520, 270, 35)]
 
 func update_nightmare(delta: float) -> void:
-	nightmare_player = move_with_walls(nightmare_player, direction_input(), 185.0, nightmare_walls(), delta)
-	var route := [Vector2(420, 170), Vector2(650, 175), Vector2(930, 390), Vector2(1100, 175)]
+	nightmare_player = move_with_walls(nightmare_player, direction_input(), 260.0 if Input.is_key_pressed(KEY_SHIFT) else 185.0, nightmare_walls(), delta)
+	var route := [Vector2(215,365),Vector2(365,365),Vector2(390,200),Vector2(740,180),Vector2(950,390),Vector2(1120,560),Vector2(1150,170)]
 	if nightmare_player.distance_to(figure) < 72.0 and figure_step < route.size():
 		figure_step += 1
 		figure = route[min(figure_step, route.size() - 1)]
-	if figure_step >= 1 and witness.x < -100.0: witness = Vector2(1110, 610)
+		if figure_step==4 and not god_seen:
+			god_seen = true
+			reveal_time = 6.0
+	if figure_step >= 3 and witness.x < -100.0: witness = nightmare_player - Vector2(130,0)
 	if witness.x > -100.0:
 		witness = witness.move_toward(nightmare_player, delta * 105.0)
 		if witness.distance_to(nightmare_player) < 28.0:
 			register_death("SEEN")
 			start_nightmare()
-	if nightmare_player.distance_to(Vector2(1110, 160)) < 60.0 and figure_step >= 2:
+	if nightmare_player.distance_to(Vector2(1110, 160)) < 60.0 and figure_step >= 5:
 		state = State.ENDING
 		cut_elapsed = 0.0
 
@@ -234,11 +295,13 @@ func close_dialogue() -> void:
 	elif title == "LIGHTHOUSE": start_cut_two()
 
 func start_cut_one() -> void:
+	death_timer = 0.0
 	state = State.CUT_ONE
 	cut_index = 0
 	cut_elapsed = 0.0
 
 func start_cut_two() -> void:
+	death_timer = 0.0
 	state = State.CUT_TWO
 	cut_index = 0
 	cut_elapsed = 0.0
@@ -261,17 +324,21 @@ func _draw() -> void:
 		State.ENDING: draw_ending()
 		State.STING: draw_sting()
 	if dialogue_open: draw_dialogue()
+	if reveal_time>0.0:
+		draw_rect(Rect2(0,0,1280,720),Color(0.01,0.015,0.018,0.92))
+		art.eye(self,Vector2(640,320),220,screen_time)
+		var caption := "It cannot see." if reveal_time>3 else "So why is it looking at me?"
+		draw_center(caption,Vector2(640,550),24,PAPER)
+		if reveal_time<1.5: draw_center("RUN",Vector2(640,610),20,RED)
 	if death_timer > 0.0:
 		draw_rect(Rect2(Vector2.ZERO, SIZE), Color(0.08, 0.0, 0.0, 0.34))
 		draw_center(death_label, Vector2(640, 370), 34, PAPER)
 	if flash > 0.0: draw_rect(Rect2(Vector2.ZERO, SIZE), Color(1, 1, 1, flash * 0.16))
 
 func draw_menu() -> void:
-	draw_rect(Rect2(Vector2.ZERO, SIZE), Color("#111318"))
-	for x in range(0, 1280, 64): draw_line(Vector2(x, 90), Vector2(x - 90, 720), Color(0.24, 0.28, 0.28, 0.18), 1.0)
-	for y in range(110, 720, 48): draw_line(Vector2(0, y), Vector2(1280, y - 150), Color(0.24, 0.28, 0.28, 0.15), 1.0)
-	draw_circle(Vector2(930, 220), 150, Color(0.10, 0.20, 0.20, 0.55))
-	draw_circle(Vector2(930, 220), 100, Color(0.08, 0.12, 0.15, 0.7))
+	art.jungle(self,jungle_walls(),screen_time)
+	art.atmosphere(self,screen_time,0)
+	draw_rect(Rect2(Vector2.ZERO,SIZE),Color(0.015,0.025,0.025,0.70))
 	draw_center("MAP", Vector2(640, 235), 96, Color("#ead7ac"))
 	draw_center("AN EXPEDITION INTO THE UNKNOWN", Vector2(640, 286), 14, Color("#9f927a"))
 	draw_line(Vector2(430, 314), Vector2(850, 314), Color(0.8, 0.65, 0.38, 0.55), 1.0)
@@ -289,16 +356,29 @@ func draw_menu() -> void:
 		draw_string(ThemeDB.fallback_font, Vector2(430, 470), "ESC closes settings", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("#9c917e"))
 
 func draw_cutscene(lines: Array[String]) -> void:
-	draw_rect(Rect2(Vector2.ZERO, SIZE), Color("#0b0d10"))
-	var frame := Rect2(150, 75, 980, 455)
-	draw_rect(frame, Color("#191d22"), true)
-	draw_rect(frame, Color("#8e7753"), false, 2.0)
-	var panel := cut_index if state == State.INTRO else cut_index + 7
-	if panel % 3 == 0: draw_cut_jungle(frame)
-	elif panel % 3 == 1: draw_cut_transition(frame)
-	else: draw_cut_reveal(frame)
-	draw_center(lines[min(cut_index, lines.size() - 1)], Vector2(640, 585), 22, PAPER)
-	draw_center("CLICK ANYWHERE  /  E  /  SPACE  CONTINUE", Vector2(640, 640), 11, Color("#bbaa87"))
+	if state == State.INTRO:
+		art.jungle(self,jungle_walls(),screen_time)
+		draw_rect(Rect2(0,0,1280,720),Color(0.015,0.025,0.025,0.45))
+		if cut_index>=3:
+			art.camp(self,Vector2(650,345),screen_time)
+			art.person(self,Vector2(674,376),-1.5,screen_time,false)
+			draw_rect(Rect2(610,394,80,45),PAPER)
+			for i in range(5): draw_line(Vector2(620,402+i*6),Vector2(678,405+i*6),Color("#6a7155"),1)
+	elif state == State.CUT_ONE:
+		art.jungle(self,jungle_walls(),screen_time)
+		draw_rect(Rect2(0,0,1280,720),Color(0.0,0.01,0.015,0.6))
+		draw_rect(Rect2(435,245,410,220),PAPER)
+		var progress := clampf(cut_elapsed/3,0,1)
+		draw_line(Vector2(460,415),Vector2(460,415).lerp(Vector2(812,268),progress),RED,2)
+	else:
+		art.sea(self,screen_time,0.8)
+		draw_rect(Rect2(0,0,1280,720),Color(0.01,0.02,0.025,0.65))
+	art.atmosphere(self,screen_time,0)
+	draw_rect(Rect2(0,0,1280,65),Color("#080d10"))
+	draw_rect(Rect2(0,530,1280,190),Color(0.025,0.03,0.035,0.97))
+	draw_center(lines[min(cut_index, lines.size()-1)],Vector2(640,591),22,PAPER)
+	draw_center("E / SPACE / CLICK TO CONTINUE",Vector2(640,657),11,Color("#999a8c"))
+	draw_center("%02d / %02d" % [cut_index+1,lines.size()],Vector2(640,32),11,Color("#999a8c"))
 
 func draw_cut_jungle(frame: Rect2) -> void:
 	draw_rect(frame, Color("#25362a"), true)
@@ -325,15 +405,8 @@ func draw_cut_reveal(frame: Rect2) -> void:
 	draw_center("THE MAP IS OPEN", Vector2(640, 435), 16, Color("#d37b76"))
 
 func draw_jungle() -> void:
-	draw_rect(PLAY_RECT, Color("#27402e"), true)
-	draw_rect(Rect2(54, 340, 1172, 100), Color("#354d55"), true)
-	draw_line(Vector2(54, 340), Vector2(1226, 340), Color("#7d9b95"), 3)
-	draw_line(Vector2(54, 440), Vector2(1226, 440), Color("#7d9b95"), 3)
-	for wall in jungle_walls(): draw_rect(wall, Color("#18241b"), true)
-	for i in range(30):
-		var p := Vector2(70 + (i * 113) % 1120, 115 + (i * 73) % 520)
-		draw_circle(p, 12, Color("#192c21"))
-		draw_circle(p + Vector2(7, -5), 7, Color("#597251"))
+	begin_world()
+	art.jungle(self,jungle_walls(),screen_time)
 	draw_marker(Vector2(250, 485), "EXPEDITION I", "NORTH SURVEY")
 	draw_marker(Vector2(545, 230), "EXPEDITION II", "NO RECORD")
 	draw_marker(Vector2(840, 420), "EXPEDITION IV", "DON'T FOLLOW IT" if jungle_record_iv_seen else "DO NOT CONTINUE")
@@ -342,6 +415,7 @@ func draw_jungle() -> void:
 	draw_player(player, Color("#c79f6c"))
 	var objective := Vector2(250, 485) if jungle_records < 1 else Vector2(545, 230) if jungle_records < 2 else Vector2(1090, 160)
 	draw_arrow(player, objective)
+	end_world(0.0)
 	draw_hud("THE MAP / JUNGLE", "Investigate the expedition records. Complete the survey.")
 	if near(player, Vector2(250, 485), 70): draw_prompt("E / SPACE  EXAMINE EXPEDITION I")
 	elif near(player, Vector2(545, 230), 70): draw_prompt("E / SPACE  EXAMINE EXPEDITION II")
@@ -350,16 +424,11 @@ func draw_jungle() -> void:
 	draw_center("R RESTART LEVEL", Vector2(1080, 684), 10, Color("#998d79"))
 
 func draw_sea() -> void:
-	draw_rect(PLAY_RECT, Color("#0d3340"), true)
-	for i in range(18): draw_line(Vector2(70 + (i % 3) * 22, 120 + i * 29), Vector2(1210 - (i % 4) * 22, 130 + i * 29), Color(0.3, 0.56, 0.59, 0.3), 2)
-	draw_island(Vector2(340, 230), 74, "BONE ISLAND")
-	draw_island(Vector2(690, 480), 82, "WRECK")
-	draw_island(Vector2(1100, 175), 62, "LIGHTHOUSE")
-	draw_circle(Vector2(720, 220), 34 + sin(screen_time * 3.0) * 5.0, Color(0.02, 0.02, 0.04, 0.85))
-	draw_circle(Vector2(530, 500), 24 + sin(screen_time * 4.0) * 4.0, Color(0.02, 0.02, 0.04, 0.8))
-	for i in range(int(sea_horror * 7.0)): draw_arc(Vector2(160 + i * 150, 620 - (i % 3) * 160), 65, 3.2, 5.9, 24, Color(0.04, 0.02, 0.05, 0.9), 10)
+	begin_world()
+	art.sea(self,screen_time,sea_horror)
 	draw_ship(ship)
 	draw_arrow(ship, Vector2(1100, 175))
+	end_world(sea_horror)
 	draw_hud("THE DROWNED MAP / SEA", "Reach the lighthouse before the water notices you.")
 	if near(ship, Vector2(340, 230), 90): draw_prompt("E / SPACE  EXAMINE BONE ISLAND")
 	elif near(ship, Vector2(690, 480), 95): draw_prompt("E / SPACE  EXAMINE WRECK")
@@ -370,18 +439,14 @@ func draw_sea() -> void:
 	draw_center("R RESTART", Vector2(1080, 684), 10, Color("#998d79"))
 
 func draw_nightmare() -> void:
-	draw_rect(PLAY_RECT, Color("#260f25"), true)
-	for wall in nightmare_walls():
-		draw_rect(wall, Color("#09070c"), true)
-		draw_rect(wall.grow(5), Color(0.42, 0.05, 0.17, 0.5), false, 2)
-	for i in range(9):
-		draw_circle(Vector2(130 + i * 130, 145 + (i % 3) * 170), 14, Color("#822d55"))
-		draw_circle(Vector2(130 + i * 130, 145 + (i % 3) * 170), 5, Color("#e6b264"))
+	begin_world()
+	art.nightmare(self,nightmare_walls(),screen_time)
 	draw_figure(figure)
 	if witness.x > -100: draw_circle(witness, 30 + sin(screen_time * 5.0) * 8.0, Color(0.02, 0.0, 0.03, 0.95))
 	draw_player(nightmare_player, Color("#ead09b"))
-	draw_arrow(nightmare_player, Vector2(1110, 160))
+	draw_arrow(nightmare_player, figure)
 	draw_marker(Vector2(1110, 160), "WAKE", "EXIT")
+	end_world(0.4)
 	draw_hud("THE LAST MAP / NIGHTMARE", "Follow the figure. Reach the door. Do not look back.")
 	draw_center("R RESTART", Vector2(1080, 684), 10, Color("#998d79"))
 
@@ -427,29 +492,25 @@ func draw_sting() -> void:
 		draw_center("YOU SHOULDN'T HAVE LOOKED AT A GOD.", Vector2(640, 520), 23, Color("#d2c09b"))
 	if cut_elapsed > 8.0: draw_center("MAP", Vector2(640, 620), 30, PAPER)
 
-func draw_marker(pos: Vector2, title: String, subtitle: String) -> void:
-	draw_line(pos + Vector2(0, -20), pos + Vector2(0, 24), Color("#684632"), 7)
-	draw_rect(Rect2(pos + Vector2(5, -22), Vector2(142, 34)), Color("#dfcda5"), true)
-	draw_string(ThemeDB.fallback_font, pos + Vector2(14, -4), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, INK)
-	draw_string(ThemeDB.fallback_font, pos + Vector2(14, 10), subtitle, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#665746"))
+func draw_marker(pos: Vector2, title: String, _subtitle: String) -> void:
+	draw_line(pos+Vector2(3,-15),pos+Vector2(3,21),Color(0,0,0,0.35),6)
+	draw_line(pos+Vector2(0,-15),pos+Vector2(0,18),Color("#716345"),4)
+	draw_rect(Rect2(pos+Vector2(-16,-22),Vector2(32,19)),Color("#635038"))
+	draw_line(pos+Vector2(-15,-21),pos+Vector2(15,-21),Color("#b29c6d"),1)
+	var symbol := title.replace("EXPEDITION ","") if title.begins_with("EXPEDITION") else ">"
+	draw_string(ThemeDB.fallback_font,pos+Vector2(-8,-8),symbol,HORIZONTAL_ALIGNMENT_LEFT,-1,10,Color("#e6d4a4"))
 
-func draw_player(pos: Vector2, color: Color) -> void:
-	draw_circle(pos, 22, Color(0.95, 0.67, 0.28, 0.13))
-	draw_circle(pos, 14, Color("#0c0a0d"))
-	draw_circle(pos, 9, color)
-	draw_circle(pos + Vector2(0, -3), 4, Color("#f6d48b"))
-	draw_string(ThemeDB.fallback_font, pos + Vector2(17, -15), "YOU", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, PAPER)
+func draw_player(pos: Vector2, _color: Color) -> void:
+	art.person(self,pos,facing,screen_time,direction_input().length()>0)
 
 func draw_ship(pos: Vector2) -> void:
-	draw_colored_polygon(PackedVector2Array([pos + Vector2(-25, -13), pos + Vector2(25, 0), pos + Vector2(-25, 13)]), Color("#d1a36a"))
-	draw_line(pos + Vector2(-4, -11), pos + Vector2(-4, 11), Color("#2c2021"), 3)
-	draw_circle(pos, 5, Color("#f0d08b"))
+	art.boat(self,pos,boat_facing,screen_time,ship_velocity.length()>10)
 
 func draw_figure(pos: Vector2) -> void:
-	draw_circle(pos, 10, Color("#060508"))
-	draw_line(pos + Vector2(0, 8), pos + Vector2(0, 34), Color("#060508"), 6)
-	draw_line(pos + Vector2(0, 17), pos + Vector2(-13, 30), Color("#060508"), 3)
-	draw_line(pos + Vector2(0, 17), pos + Vector2(13, 30), Color("#060508"), 3)
+	draw_circle(pos+Vector2(5,8),12,Color(0,0,0,0.22))
+	draw_colored_polygon(PackedVector2Array([pos+Vector2(0,-8),pos+Vector2(-7,0),pos+Vector2(-10,19),pos+Vector2(0,16),pos+Vector2(8,20),pos+Vector2(7,0)]),Color("#0b1416"))
+	draw_circle(pos+Vector2(0,-6),5,Color("#081012"))
+	draw_line(pos+Vector2(-3,1),pos+Vector2(-5,12),Color("#1a2424"),2)
 
 func draw_island(pos: Vector2, radius: float, label: String) -> void:
 	draw_circle(pos, radius, Color("#746b4b"))
@@ -471,3 +532,11 @@ func draw_center(text: String, pos: Vector2, size: int, color: Color) -> void:
 func near(a: Vector2, b: Vector2, radius: float) -> bool: return a.distance_to(b) <= radius
 
 func format_time(value: float) -> String: return "%02d:%05.2f" % [int(value) / 60, fmod(value, 60.0)]
+
+
+func begin_world() -> void:
+	draw_set_transform(Vector2(640,365)-camera_center*1.45,0,Vector2(1.45,1.45))
+
+func end_world(danger: float) -> void:
+	draw_set_transform(Vector2.ZERO)
+	art.atmosphere(self,screen_time,danger)
