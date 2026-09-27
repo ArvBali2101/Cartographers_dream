@@ -1,0 +1,49 @@
+# Merged game journal
+
+## 2026-09-27 — Correct teammate branch imported
+
+- Root-cause investigation found the actual teammate integration at friend/main, commit 66af3c3 (merged), not the local main commit 3a7584a. Confirmed the remote main still points to this hash.
+- Imported the entire source tree into this project directory without overwriting the older local project. No MASTER_NOTES PDF is present in the imported tree.
+- Retained the friend's handwritten charts, fonts, theme, textures, music, cave meshes, monster and four-chapter sea-to-jungle-to-cave-to-labyrinth progression.
+- Added lore only through existing lost-ship logs, torn pages and interludes: Vane's signature, the extra place at supper, intentional omissions, maps as connections and the danger of bringing the sheet home. No city level or two-seal gate from the older project was imposed on this build.
+- Isolated verification settings/records with --test and added a renderer/headless scene-loading smoke suite. Existing friend gameplay tests remain available; their results must be reported separately from the older build's 101 checks.
+- Completed 18 checks in both headless and real-renderer runs, covering fonts/theme, the correct menu and all four chapter scenes. Inspected real menu, jungle and finale captures. Exit-time resource cleanup warnings remain; the smoke suite is not a full progression test.
+- Updated both parent launchers to target this project. Verified representative map/sea/ink renderers, cave/maze/beast builders, theme, handwriting font, texture and parchment shader hashes match the teammate commit exactly.
+
+## 2026-09-27 — Licensed HD surfaces and deeper horror
+
+- Downloaded eight Poly Haven 2K JPEG maps through its public API and verified each supplied MD5. Connected rock, brick and cobblestone textures to existing cave/labyrinth materials, preserving geometry, collision and authored map rendering. Added a reproducible build-time download script and source/license documentation.
+- Added saved Performance/HD/High MSAA presets and a 1600x900 default window. Captured the actual renderer at 1920x1080; checked UI and field-note bounds. Compatibility renderer stays in use for the installed Iris Xe GPU.
+- Researched primary Lovecraft, Blackwood and Chambers texts. Added original shared-dream evidence, contaminated foliage, incomplete-circle cave warnings and publication danger. Updated both generated cave data and its generator. Longer notes now display sequential blocks with sufficient reading time instead of overflowing or disappearing after 4.5 seconds.
+- Headless and actual-renderer smoke each passed 25 checks. The real cave bot reached the door, opened it and entered the finale through its interlude. The monster-active finale bot obtained all three keys, opened the exit gate and escaped at 01:09.51. Added an extra extended-note layout check afterward. Existing smoke teardown resource warnings remain documented.
+- Final 1080p renderer rerun passed 26 checks including extended evidence layout. Hash-checked music, jungle gameplay, beast and door scripts against friend/main; all remain unchanged. Downloaded texture payload is eight files, approximately 17.9 MB. Ignored QA images from Godot imports/exports via qa/.gdignore.
+- The final 26-check process returned code 1 after its success report with no further output, unlike the earlier 25-check and gameplay runs. Recorded this unresolved shutdown separately from the passing assertions.
+
+## 2026-09-27 — Named gods, cinematic inserts, chapter practice and horror score
+
+- Named Nyarlathotep, Yog-Sothoth and Azathoth in mandatory chapter transitions, and Shub-Niggurath in optional Vane notes. Cthulhu is explicitly distinguished as a Great Old One. Read primary Dream-Quest, Dunwich Horror and Haunter texts; documented original game inventions separately from source motifs. The small figure and pursuing beast remain unidentified rather than falsely labelled full manifestations of an Outer God.
+- Added live ink-route, wave/shadow, contour and orbit/closed-eye animations. Text now fades and reveals progressively; pressing continue during reveal finishes the line rather than dropping the input. Added framing changes, god-reveal silence and an approaching-figure sting to the escape ending. Existing gameplay scenes and controls remain intact.
+- Initial silhouette/procedural humanoid was visibly too simple in close-up. Downloaded Benny Weimer's CC0 Gothic Statue from Poly Haven, verified glTF/buffer/three 2K PBR maps, and normalized it into a live 1920x1080 3D insert with rim lighting, camera approach and subtle breathing/yaw. It is an animated stone motif, not a photoreal rigged actor. Skeletal fallback joints are not advertised as animation of the downloaded static statue.
+- Enabled all four chapters on fresh saves. Chapter practice sets full_run false; Begin the Survey still plays the full story. The picker was exercised through to the actual labyrinth scene.
+- Generated two original 24-second stereo WAV horror layers, both peak-normalized to -15 dBFS. Added restrained drone/pulse mixing, music-volume control and silence transitions. All ten original OGG soundtrack files remain byte-identical to friend/main.
+- Story tests exercise music loading/fades/mute/silence, narrative names, animation dimensions, text advance, all chapter buttons, real selected-scene loading and model instantiation. Corrected a too-short reveal wait. Renderer automation initially accepted physical keyboard input and jumped scenes while the user typed; added story-test-only input isolation without affecting production or gameplay bots. Final headless story run passed 43 checks, exit 0. Full updated ending passed headlessly from campfire through visitor to end card, exit 0; final isolated renderer reruns are recorded below when complete.
+- Final isolated renderer story run passed all 43 checks and exited 0. Inspected the named-god interlude, detailed figure close-up and unrestricted chapter panel. Original ten soundtrack OGGs match the teammate commit; only new layers and mixer hooks were added. Full updated ending renderer verification follows separately.
+- Complete updated escape ending renderer test observed the detailed visitor approaching and the end card arriving afterward; both assertions passed and process exited 0. A frame from the actual ending was saved and inspected. No human listening/balance or photoreal-human claim is implied by these tests.
+
+
+
+## 2026-09-27 — Authored King opening and playable horror revision
+
+- Reviewed the supplied partial ZIP and start.mp4 reference. Restored the native animated King/abbey/harbour/voyage sequence and arrival film without replacing the preferred merged game's levels, controls or soundtrack.
+- Moved named-god evidence into beacons, survey landmarks and cave murals; shortened connecting interludes, improved wrapped lore and map bake resolution. Added required cave warning detours and two maze ward stones before the Black Key. Kept three keys, ink walls, portals and the 0.9-speed hunter; shortened its door-bash delay.
+- Replaced regular bricks with checksum-verified 2K CC0 Rock Wall 07. Added an optional warned Azathoth gate, immediate death and a live 1080p detailed stone-idol reveal. Generated painterly artwork was inspected but user rejected its artificial appearance; photoreal edit hit a service usage limit. Switched to the disclosed asset-based in-engine render; reference image retained, no claim of a photoreal organic god.
+- Actual movement testing exposed a gate hinge/collision bug missed by direct callback tests; fixed by animating the physics body itself. Corrected physical-gate test passed seven checks, exit 0. General revision: 33 checks passed in renderer and headless, final headless exit 0. All three complete ending sequences reached their end cards. Active-hunter traversal of the extended maze escaped at bot time 01:31.23, exit 0.
+- Escape adds an indirect doubt about the abbey's dreamer belief. Loss visibly flattens the cartographer mark into a maze wall, serving the power beyond the chart. Witnessed death correctly selects loss rather than waking victory. See merged_game/REVISION_NOTES.md for sources, exact scope and remaining teardown/human-QA limitations. No MASTER_NOTES PDF found or changed. Existing trailer files are untouched.
+
+- Final asset refinement: downloaded a separate 4K Gothic Statue glTF/texture set, verified every API MD5 and imported successfully, leaving the existing 2K cinematic model unchanged. The refined live-idol frame was inspected; final physical-gate test passed seven checks, exit 0. A story regression rerun caught an intro coroutine continuing after scene removal; fixed exit-tree cancellation and post-await guards. Final story regression passed 43 checks, exit 0.
+## 2026-09-27 - Submission cleanup and paper-reader fix
+
+- Replaced the blocking timed paper overlay with a paused, scrollable reader, Next/Previous controls and an explicit Finish reading button. E/Space/Esc also closes it; cursor, controls and timer resume correctly. Reader uses a separate UI layer above the HUD.
+- Final headless reader regression passed 19 checks, exit 0; story regression passed 43 checks, exit 0. Earlier native reader regression also passed 19 checks, exit 0.
+- Archived the obsolete root game, original video/trailer files, redundant downloads, unused reference art/textures and generated QA files outside the repository. Preserved original files rather than permanently erasing them. Current project remains merged_game/project.godot; bundled engine remains locally available.
+- Moved research/revision documents into merged_game/docs; rewrote root launch/submission guidance and added CLEANUP.md. No MASTER_NOTES PDF was found or changed. Preparing the tested active source and assets for origin/main; push status is recorded separately after upload.

@@ -1,0 +1,13 @@
+* text=auto
+*.gd text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.gdshader text eol=lf
+*.md text eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.ogg binary
+*.wav binary
+*.bin binary
+merged_game/assets/fonts/OFL-*.txt -whitespace

@@ -1,6 +1,10 @@
 .godot/
 Godot_v4.7-stable/
 Godot_v4.7-stable_win64.exe.zip
-*.uid
 *.log
 qa/
+/friend-66af3c3.zip
+__pycache__/
+*.pyc
+/Videos/
+/Trailer/
